@@ -1,0 +1,6 @@
+{
+  "name": "Task Tracker",
+  "description": "A modern task and habit organizer featuring daily tracking, task categories, completion stats, and interactive focus timer.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
