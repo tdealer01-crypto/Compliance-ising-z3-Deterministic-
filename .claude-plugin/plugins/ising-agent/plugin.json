@@ -1,0 +1,24 @@
+{
+  "name": "ising-agent",
+  "version": "3.0.0",
+  "owner": "tdealer01-crypto",
+  "description": "Z3 deterministic compliance verification, QUBO policy optimization, and MCP gateway operations.",
+  "strict": true,
+  "environments": [
+    {
+      "name": "ising-agent",
+      "type": "relative",
+      "path": ".claude-plugin/environments/ising-agent.json"
+    }
+  ],
+  "agents": [
+    "agents/*.json"
+  ],
+  "skills": [
+    "skills/*/SKILL.json"
+  ],
+  "hooks": {
+    "preBuild": "hooks/preBuild.sh",
+    "postTest": "hooks/postTest.sh"
+  }
+}

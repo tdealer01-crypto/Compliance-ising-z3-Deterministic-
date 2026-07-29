@@ -1,0 +1,5 @@
+{
+  "name": "z3-compliance-review",
+  "description": "Z3 formal constraint verification and compliance review logic.",
+  "strict": true
+}
