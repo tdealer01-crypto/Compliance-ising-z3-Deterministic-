@@ -263,14 +263,27 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
     // --- QUBO Policy Optimizer Actions ---
     fun switchPreset(preset: String) {
         _activePreset.value = preset
-        if (preset == "CRIMINAL_LAW") {
-            _quboRules.value = QuboPolicyEngine.CRIMINAL_LAW_RULES
-            _quboConstraints.value = QuboPolicyEngine.CRIMINAL_LAW_CONSTRAINTS
-            _quboBudget.value = 1000.0
-        } else {
-            _quboRules.value = QuboPolicyEngine.FINTECH_RULES
-            _quboConstraints.value = QuboPolicyEngine.FINTECH_CONSTRAINTS
-            _quboBudget.value = 1500.0
+        when (preset) {
+            "CRIMINAL_LAW" -> {
+                _quboRules.value = QuboPolicyEngine.CRIMINAL_LAW_RULES
+                _quboConstraints.value = QuboPolicyEngine.CRIMINAL_LAW_CONSTRAINTS
+                _quboBudget.value = 1000.0
+            }
+            "EU_GDPR_AI" -> {
+                _quboRules.value = QuboPolicyEngine.EU_GDPR_AI_ACT_RULES
+                _quboConstraints.value = QuboPolicyEngine.EU_GDPR_AI_ACT_CONSTRAINTS
+                _quboBudget.value = 1500.0
+            }
+            "THAI_PDPA" -> {
+                _quboRules.value = QuboPolicyEngine.THAI_PDPA_RULES
+                _quboConstraints.value = QuboPolicyEngine.THAI_PDPA_CONSTRAINTS
+                _quboBudget.value = 800.0
+            }
+            else -> {
+                _quboRules.value = QuboPolicyEngine.FINTECH_RULES
+                _quboConstraints.value = QuboPolicyEngine.FINTECH_CONSTRAINTS
+                _quboBudget.value = 1500.0
+            }
         }
         runQuboOptimization()
     }

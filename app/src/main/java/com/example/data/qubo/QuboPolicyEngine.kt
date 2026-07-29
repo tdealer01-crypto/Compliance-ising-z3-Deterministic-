@@ -30,6 +30,41 @@ object QuboPolicyEngine {
         Constraint.Implication(9, 10, "Pen Testing requires Incident Response Plan")
     )
 
+    // EU GDPR & EU AI Act Governance Rules & Z3 Constraints
+    val EU_GDPR_AI_ACT_RULES = listOf(
+        PolicyRule(0, "GDPR_CONSENT_ART6", 150.0, 30.0, 50.0, "COMPLIANCE", "Art. 6 GDPR Lawful Processing & Explicit Consent"),
+        PolicyRule(1, "GDPR_ERASURE_ART17", 200.0, 25.0, 40.0, "DATA_PROTECTION", "Art. 17 GDPR Right to Erasure ('Right to be Forgotten')"),
+        PolicyRule(2, "GDPR_DPO_ART37", 250.0, 35.0, 60.0, "IDENTITY", "Art. 37 GDPR Data Protection Officer (DPO) Mandatory Role"),
+        PolicyRule(3, "GDPR_DPIA_ART35", 300.0, 45.0, 70.0, "MONITORING", "Art. 35 GDPR Data Protection Impact Assessment"),
+        PolicyRule(4, "EU_AI_ACT_HIGH_RISK", 400.0, 60.0, 85.0, "COMPLIANCE", "EU AI Act High-Risk System Conformity & Logging"),
+        PolicyRule(5, "EU_AI_ACT_OVERSIGHT", 350.0, 50.0, 80.0, "INCIDENT_RESPONSE", "Art. 14 EU AI Act Human Oversight & Intervention Logic"),
+        PolicyRule(6, "EU_AI_ACT_TRANSPARENCY", 220.0, 35.0, 50.0, "TRAINING", "Art. 13 EU AI Act System Transparency & Technical Docs")
+    )
+
+    val EU_GDPR_AI_ACT_CONSTRAINTS = listOf<Constraint>(
+        Constraint.Implication(4, 3, "High-Risk AI Act system requires GDPR DPIA Assessment"),
+        Constraint.Implication(4, 2, "High-Risk AI deployment requires DPO Oversight"),
+        Constraint.Implication(5, 6, "Human Oversight requires Transparency & Model Docs"),
+        Constraint.MinActive(3, "At least 3 core EU regulatory safeguards active"),
+        Constraint.MaxCost(1500.0, "Maximum EU compliance budget cap $1,500")
+    )
+
+    // Thai PDPA (พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562) Rules & Z3 Constraints
+    val THAI_PDPA_RULES = listOf(
+        PolicyRule(0, "PDPA_CONSENT_SEC19", 120.0, 30.0, 45.0, "COMPLIANCE", "ม.19 การขอความยินยอมแจ้งวัตถุประสงค์โดยชัดแจ้ง"),
+        PolicyRule(1, "PDPA_RIGHTS_SEC30", 180.0, 25.0, 40.0, "DATA_PROTECTION", "ม.30 สิทธิเข้าถึง ถอนความยินยอม และลบข้อมูล"),
+        PolicyRule(2, "PDPA_SECURITY_SEC37", 250.0, 40.0, 60.0, "DATA_PROTECTION", "ม.37 มาตรการรักษาความปลอดภัยขั้นต่ำและเข้ารหัส"),
+        PolicyRule(3, "PDPA_BREACH_NOTIFY_SEC37", 200.0, 35.0, 50.0, "INCIDENT_RESPONSE", "ม.37 แจ้งเหตุละเมิดข้อมูลส่วนบุคคลภายใน 72 ชั่วโมง"),
+        PolicyRule(4, "PDPA_DPO_SEC41", 220.0, 30.0, 55.0, "IDENTITY", "ม.41 การแต่งตั้งเจ้าหน้าที่คุ้มครองข้อมูลส่วนบุคคล (DPO)")
+    )
+
+    val THAI_PDPA_CONSTRAINTS = listOf<Constraint>(
+        Constraint.Implication(3, 2, "การแจ้งเหตุละเมิด (ม.37) ต้องมีระบบรักษาความปลอดภัยพื้นฐานก่อน"),
+        Constraint.Implication(1, 0, "การใช้สิทธิเจ้าของข้อมูล (ม.30) ต้องมีฐานการเก็บความยินยอม (ม.19)"),
+        Constraint.MinActive(2, "ต้องมีมาตรการ PDPA ขั้นต่ำอย่างน้อย 2 ด้าน"),
+        Constraint.MaxCost(800.0, "งบประมาณมาตรการ PDPA ไม่เกิน $800")
+    )
+
     // Thai Criminal Law (ประมวลกฎหมายอาญาเบื้องต้น) Policy Rules & Z3 Constraints
     val CRIMINAL_LAW_RULES = listOf(
         PolicyRule(0, "COMMITTED_ACT", 100.0, 10.0, 20.0, "COMPLIANCE", "การกระทำครบองค์ประกอบภายนอก (Actus Reus)"),

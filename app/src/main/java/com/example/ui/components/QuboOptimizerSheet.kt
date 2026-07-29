@@ -143,19 +143,33 @@ fun QuboOptimizerSheet(
 
             // Policy Model Preset Selector
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 FilterChip(
                     selected = activePreset == "CRIMINAL_LAW",
                     onClick = { onSwitchPreset("CRIMINAL_LAW") },
-                    label = { Text("⚖️ ประมวลกฎหมายอาญา") },
+                    label = { Text("⚖️ อาญา", fontSize = 11.sp) },
                     modifier = Modifier.testTag("preset_criminal_law")
+                )
+                FilterChip(
+                    selected = activePreset == "EU_GDPR_AI",
+                    onClick = { onSwitchPreset("EU_GDPR_AI") },
+                    label = { Text("🇪🇺 EU AI/GDPR", fontSize = 11.sp) },
+                    modifier = Modifier.testTag("preset_eu_gdpr_ai")
+                )
+                FilterChip(
+                    selected = activePreset == "THAI_PDPA",
+                    onClick = { onSwitchPreset("THAI_PDPA") },
+                    label = { Text("🇹🇭 PDPA", fontSize = 11.sp) },
+                    modifier = Modifier.testTag("preset_thai_pdpa")
                 )
                 FilterChip(
                     selected = activePreset == "FINTECH",
                     onClick = { onSwitchPreset("FINTECH") },
-                    label = { Text("🔒 FinTech Policy") },
+                    label = { Text("🔒 FinTech", fontSize = 11.sp) },
                     modifier = Modifier.testTag("preset_fintech")
                 )
             }
