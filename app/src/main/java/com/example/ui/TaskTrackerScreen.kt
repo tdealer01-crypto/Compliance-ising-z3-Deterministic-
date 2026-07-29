@@ -102,6 +102,8 @@ fun TaskTrackerScreen(
     val counterfactualResult by viewModel.counterfactualResult.collectAsStateWithLifecycle()
     val quboBudget by viewModel.quboBudget.collectAsStateWithLifecycle()
     val isOptimizing by viewModel.isOptimizing.collectAsStateWithLifecycle()
+    val mcpDispatchResults by viewModel.mcpDispatchResults.collectAsStateWithLifecycle()
+    val isMcpDispatching by viewModel.isMcpDispatching.collectAsStateWithLifecycle()
 
     val categories = listOf("All", "Work", "Personal", "Health", "Study", "Finance")
 
@@ -115,15 +117,15 @@ fun TaskTrackerScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.img_app_icon_1785297199821),
-                            contentDescription = "Task Tracker Logo",
+                            painter = painterResource(id = R.drawable.img_dsg_logo),
+                            contentDescription = "DSG QUBO & Ising Solver Logo",
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
                         )
                         Text(
-                            text = "Task Tracker",
-                            style = MaterialTheme.typography.titleLarge,
+                            text = "DSG QUBO & Ising Solver",
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -372,10 +374,13 @@ fun TaskTrackerScreen(
             currentBudget = quboBudget,
             activePreset = activePreset,
             isOptimizing = isOptimizing,
+            mcpDispatchResults = mcpDispatchResults,
+            isMcpDispatching = isMcpDispatching,
             onSwitchPreset = { viewModel.switchPreset(it) },
             onBudgetChange = { viewModel.setQuboBudget(it) },
             onRunCounterfactual = { viewModel.runCounterfactualAnalysis(it) },
             onApplyToTasks = { viewModel.applyQuboSolutionToTasks() },
+            onDispatchMcp = { viewModel.dispatchMcpEndpoint(it) },
             onDismiss = { viewModel.closeQuboSheet() }
         )
     }

@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.FocusSessionEntity
 import com.example.data.TaskEntity
 import com.example.data.TaskRepository
+import com.example.data.mcp.McpDispatchResult
+import com.example.data.mcp.McpEndpointType
+import com.example.data.mcp.McpGatewayEngine
 import com.example.data.qubo.Constraint
 import com.example.data.qubo.CounterfactualResult
 import com.example.data.qubo.EngineConfig
@@ -85,6 +88,13 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
 
     private val _isOptimizing = MutableStateFlow(false)
     val isOptimizing: StateFlow<Boolean> = _isOptimizing
+
+    // MCP Gateway State
+    private val _mcpDispatchResults = MutableStateFlow<Map<McpEndpointType, McpDispatchResult>>(emptyMap())
+    val mcpDispatchResults: StateFlow<Map<McpEndpointType, McpDispatchResult>> = _mcpDispatchResults
+
+    private val _isMcpDispatching = MutableStateFlow(false)
+    val isMcpDispatching: StateFlow<Boolean> = _isMcpDispatching
 
     init {
         viewModelScope.launch {
@@ -360,6 +370,23 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
                 repository.insertTask(newTask)
             }
             closeQuboSheet()
+        }
+    }
+
+    fun dispatchMcpEndpoint(endpoint: McpEndpointType) {
+        val sol = _quboSolution.value ?: return
+        viewModelScope.launch {
+            _isMcpDispatching.value = true
+            val result = McpGatewayEngine.dispatchToEndpoint(
+                endpoint = endpoint,
+                presetName = _activePreset.value,
+                solution = sol,
+                rules = _quboRules.value
+            )
+            val updated = _mcpDispatchResults.value.toMutableMap()
+            updated[endpoint] = result
+            _mcpDispatchResults.value = updated
+            _isMcpDispatching.value = false
         }
     }
 }

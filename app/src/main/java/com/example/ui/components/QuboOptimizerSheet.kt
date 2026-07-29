@@ -61,6 +61,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Cable
+import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.Send
+import com.example.data.mcp.McpDispatchResult
+import com.example.data.mcp.McpEndpointType
+import com.example.data.mcp.McpGatewayEngine
 import com.example.data.qubo.CounterfactualResult
 import com.example.data.qubo.PolicyRule
 import com.example.data.qubo.QuboSolution
@@ -73,10 +79,13 @@ fun QuboOptimizerSheet(
     currentBudget: Double,
     activePreset: String,
     isOptimizing: Boolean,
+    mcpDispatchResults: Map<McpEndpointType, McpDispatchResult> = emptyMap(),
+    isMcpDispatching: Boolean = false,
     onSwitchPreset: (String) -> Unit,
     onBudgetChange: (Double) -> Unit,
     onRunCounterfactual: (Double) -> Unit,
     onApplyToTasks: () -> Unit,
+    onDispatchMcp: (McpEndpointType) -> Unit = {},
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -354,6 +363,11 @@ fun QuboOptimizerSheet(
                                 onClick = { selectedTab = 3 },
                                 text = { Text("Audit Chain") }
                             )
+                            Tab(
+                                selected = selectedTab == 4,
+                                onClick = { selectedTab = 4 },
+                                text = { Text("🔌 MCP Gateway") }
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -367,6 +381,12 @@ fun QuboOptimizerSheet(
                                 onRun = onRunCounterfactual
                             )
                             3 -> AuditChainSection(solution)
+                            4 -> McpGatewaySection(
+                                solution = solution,
+                                mcpDispatchResults = mcpDispatchResults,
+                                isMcpDispatching = isMcpDispatching,
+                                onDispatchMcp = onDispatchMcp
+                            )
                         }
                     }
                 }
@@ -383,7 +403,7 @@ fun QuboOptimizerSheet(
                 ) {
                     Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = "Apply to tasks")
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Apply ${solution.activeCount} Policy Rules to Task Tracker")
+                    Text("Apply ${solution.activeCount} Policy Rules to Action Engine")
                 }
             }
         }
@@ -623,5 +643,184 @@ private fun AuditChainSection(solution: QuboSolution) {
             style = MaterialTheme.typography.bodySmall,
             fontSize = 11.sp
         )
+    }
+}
+
+@Composable
+private fun McpGatewaySection(
+    solution: QuboSolution,
+    mcpDispatchResults: Map<McpEndpointType, McpDispatchResult>,
+    isMcpDispatching: Boolean,
+    onDispatchMcp: (McpEndpointType) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Column {
+            Text(
+                text = "Model Context Protocol (MCP) Endpoints",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Export formal Z3 proof payloads & QUBO solution states to industry standard AI & cloud endpoints.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        McpGatewayEngine.AVAILABLE_ENDPOINTS.forEach { endpoint ->
+            val result = mcpDispatchResults[endpoint]
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (result?.success == true)
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                    else
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Cable,
+                                contentDescription = "MCP Icon",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = endpoint.displayName,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = endpoint.providerName,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        if (result?.success == true) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(MaterialTheme.colorScheme.secondary)
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = "Synced",
+                                        tint = MaterialTheme.colorScheme.onSecondary,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Text(
+                                        text = "MCP SYNCED 200",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSecondary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = "Endpoint URL: ${endpoint.defaultUrl}",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (result != null) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .padding(10.dp)
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(
+                                    text = "✓ ${result.statusMessage}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = "Payload Hash: ${result.payloadHash.take(24)}...",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 10.sp
+                                )
+                                Text(
+                                    text = "Sync Time: ${result.timestamp}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.outline,
+                                    fontSize = 9.sp
+                                )
+                            }
+                        }
+                    }
+
+                    Button(
+                        onClick = { onDispatchMcp(endpoint) },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isMcpDispatching,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        if (isMcpDispatching) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Dispatching MCP Payload...", fontSize = 12.sp)
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Send,
+                                contentDescription = "Sync",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (result != null) "Re-Sync to ${endpoint.displayName}" else "Sync via MCP Protocol v2.0",
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
