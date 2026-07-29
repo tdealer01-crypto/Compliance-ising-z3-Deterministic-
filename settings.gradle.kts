@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Task Tracker"
+rootProject.name = "DSG QUBO & Ising Solver"
 
 include(":app")

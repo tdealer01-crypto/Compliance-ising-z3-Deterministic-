@@ -1,4 +1,4 @@
-# 🛡️ DSG QUBO Policy Engine, Z3 Formal Verification & Legal AI System
+# 🛡️ DSG QUBO & Ising Solver — Policy Engine & Z3 Formal Verification System
 
 > **Deterministic QUBO/Ising Optimization Engine, Z3 Formal Constraint Logic Verification, What-If Counterfactual Simulation, and Multi-Regulatory Framework Mapping (Thai Criminal Law, EU GDPR & EU AI Act, Thai PDPA, FinTech)**
 

@@ -1,6 +1,6 @@
 {
-  "name": "Task Tracker",
-  "description": "A modern task and habit organizer featuring daily tracking, task categories, completion stats, and interactive focus timer.",
+  "name": "DSG QUBO & Ising Solver",
+  "description": "Deterministic QUBO & Ising Model Policy Optimization Engine, Z3 Formal Constraint Logic Verification, What-If Simulation, and Regulatory Compliance Framework (Thai Criminal Law, EU GDPR & AI Act, Thai PDPA, FinTech).",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
