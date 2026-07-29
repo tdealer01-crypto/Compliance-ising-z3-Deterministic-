@@ -71,7 +71,9 @@ fun QuboOptimizerSheet(
     solution: QuboSolution?,
     counterfactualResult: CounterfactualResult?,
     currentBudget: Double,
+    activePreset: String,
     isOptimizing: Boolean,
+    onSwitchPreset: (String) -> Unit,
     onBudgetChange: (Double) -> Unit,
     onRunCounterfactual: (Double) -> Unit,
     onApplyToTasks: () -> Unit,
@@ -137,7 +139,28 @@ fun QuboOptimizerSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Policy Model Preset Selector
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = activePreset == "CRIMINAL_LAW",
+                    onClick = { onSwitchPreset("CRIMINAL_LAW") },
+                    label = { Text("⚖️ ประมวลกฎหมายอาญา") },
+                    modifier = Modifier.testTag("preset_criminal_law")
+                )
+                FilterChip(
+                    selected = activePreset == "FINTECH",
+                    onClick = { onSwitchPreset("FINTECH") },
+                    label = { Text("🔒 FinTech Policy") },
+                    modifier = Modifier.testTag("preset_fintech")
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             if (isOptimizing || solution == null) {
                 Box(

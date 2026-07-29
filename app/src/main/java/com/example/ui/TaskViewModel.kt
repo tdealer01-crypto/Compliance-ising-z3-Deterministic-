@@ -65,10 +65,13 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
     private val _isQuboSheetOpen = MutableStateFlow(false)
     val isQuboSheetOpen: StateFlow<Boolean> = _isQuboSheetOpen
 
-    private val _quboRules = MutableStateFlow<List<PolicyRule>>(QuboPolicyEngine.FINTECH_RULES)
+    private val _activePreset = MutableStateFlow("CRIMINAL_LAW") // default to Criminal Law
+    val activePreset: StateFlow<String> = _activePreset
+
+    private val _quboRules = MutableStateFlow<List<PolicyRule>>(QuboPolicyEngine.CRIMINAL_LAW_RULES)
     val quboRules: StateFlow<List<PolicyRule>> = _quboRules
 
-    private val _quboConstraints = MutableStateFlow<List<Constraint>>(QuboPolicyEngine.FINTECH_CONSTRAINTS)
+    private val _quboConstraints = MutableStateFlow<List<Constraint>>(QuboPolicyEngine.CRIMINAL_LAW_CONSTRAINTS)
     val quboConstraints: StateFlow<List<Constraint>> = _quboConstraints
 
     private val _quboSolution = MutableStateFlow<QuboSolution?>(null)
@@ -77,7 +80,7 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
     private val _counterfactualResult = MutableStateFlow<CounterfactualResult?>(null)
     val counterfactualResult: StateFlow<CounterfactualResult?> = _counterfactualResult
 
-    private val _quboBudget = MutableStateFlow(1500.0)
+    private val _quboBudget = MutableStateFlow(1000.0)
     val quboBudget: StateFlow<Double> = _quboBudget
 
     private val _isOptimizing = MutableStateFlow(false)
@@ -258,6 +261,20 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
     }
 
     // --- QUBO Policy Optimizer Actions ---
+    fun switchPreset(preset: String) {
+        _activePreset.value = preset
+        if (preset == "CRIMINAL_LAW") {
+            _quboRules.value = QuboPolicyEngine.CRIMINAL_LAW_RULES
+            _quboConstraints.value = QuboPolicyEngine.CRIMINAL_LAW_CONSTRAINTS
+            _quboBudget.value = 1000.0
+        } else {
+            _quboRules.value = QuboPolicyEngine.FINTECH_RULES
+            _quboConstraints.value = QuboPolicyEngine.FINTECH_CONSTRAINTS
+            _quboBudget.value = 1500.0
+        }
+        runQuboOptimization()
+    }
+
     fun openQuboSheet() {
         _isQuboSheetOpen.value = true
         runQuboOptimization()

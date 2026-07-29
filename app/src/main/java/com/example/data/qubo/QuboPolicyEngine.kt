@@ -30,6 +30,26 @@ object QuboPolicyEngine {
         Constraint.Implication(9, 10, "Pen Testing requires Incident Response Plan")
     )
 
+    // Thai Criminal Law (ประมวลกฎหมายอาญาเบื้องต้น) Policy Rules & Z3 Constraints
+    val CRIMINAL_LAW_RULES = listOf(
+        PolicyRule(0, "COMMITTED_ACT", 100.0, 10.0, 20.0, "COMPLIANCE", "การกระทำครบองค์ประกอบภายนอก (Actus Reus)"),
+        PolicyRule(1, "INTENTIONAL_M59", 200.0, 10.0, 30.0, "COMPLIANCE", "กระทำโดยเจตนา (ม.59) รู้สำนึกและประสงค์ต่อผล"),
+        PolicyRule(2, "NEGLIGENT_M59", 150.0, 10.0, 20.0, "COMPLIANCE", "กระทำโดยประมาท (ม.59 วรรค 4) ปราศจากความระมัดระวัง"),
+        PolicyRule(3, "SELF_DEFENSE_M68", 50.0, 80.0, 90.0, "INCIDENT_RESPONSE", "ป้องกันโดยชอบด้วยกฎหมาย (ม.68) -> ไม่มีความผิด"),
+        PolicyRule(4, "NECESSITY_M67", 80.0, 60.0, 70.0, "INCIDENT_RESPONSE", "กระทำด้วยความจำเป็น (ม.67) -> มีความผิดแต่ไม่ต้องรับโทษ"),
+        PolicyRule(5, "PROVOCATION_M72", 70.0, 40.0, 50.0, "INCIDENT_RESPONSE", "บันดาลโทสะ (ม.72) ถูกข่มเหงอย่างร้ายแรง -> ศาลลดโทษ"),
+        PolicyRule(6, "COMPENSATION_M78", 100.0, 30.0, 60.0, "TRAINING", "เหตุบรรเทาโทษ (ม.78) ชดใช้ค่าเสียหายและสำนึกผิด -> ลดโทษ"),
+        PolicyRule(7, "INFANT_UNDER_12_M73", 30.0, 90.0, 80.0, "COMPLIANCE", "เด็กอายุไม่เกิน 12 ปี (ม.73) -> ไม่ต้องรับโทษ")
+    )
+
+    val CRIMINAL_LAW_CONSTRAINTS = listOf<Constraint>(
+        Constraint.MutualExclusion(listOf(1, 2), "เจตนา (ม.59) และ ประมาท (ม.59ว4) แยกจากกันเด็ดขาด"),
+        Constraint.Implication(3, 0, "การอ้างป้องกันชอบด้วยกฎหมาย (ม.68) ต้องมีการกระทำเกิดขึ้นก่อน"),
+        Constraint.MutualExclusion(listOf(3, 4), "เหตุยกเว้นความผิด (ม.68) และ เหตุยกเว้นโทษ (ม.67) ไม่เกิดซ้อนกัน"),
+        Constraint.MinActive(2, "ต้องพิจารณาองค์ประกอบการกระทำและเจตนาอย่างน้อย 2 เงื่อนไข"),
+        Constraint.MaxCost(1000.0, "เพดานงบประมาณประเมินโทษ/ความเสี่ยงทางกฎหมาย $1,000")
+    )
+
     fun buildQUBOMatrix(
         rules: List<PolicyRule>,
         constraints: List<Constraint>,

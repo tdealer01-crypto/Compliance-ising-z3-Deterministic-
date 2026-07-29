@@ -97,6 +97,7 @@ fun TaskTrackerScreen(
 
     // QUBO State
     val isQuboSheetOpen by viewModel.isQuboSheetOpen.collectAsStateWithLifecycle()
+    val activePreset by viewModel.activePreset.collectAsStateWithLifecycle()
     val quboSolution by viewModel.quboSolution.collectAsStateWithLifecycle()
     val counterfactualResult by viewModel.counterfactualResult.collectAsStateWithLifecycle()
     val quboBudget by viewModel.quboBudget.collectAsStateWithLifecycle()
@@ -369,7 +370,9 @@ fun TaskTrackerScreen(
             solution = quboSolution,
             counterfactualResult = counterfactualResult,
             currentBudget = quboBudget,
+            activePreset = activePreset,
             isOptimizing = isOptimizing,
+            onSwitchPreset = { viewModel.switchPreset(it) },
             onBudgetChange = { viewModel.setQuboBudget(it) },
             onRunCounterfactual = { viewModel.runCounterfactualAnalysis(it) },
             onApplyToTasks = { viewModel.applyQuboSolutionToTasks() },
