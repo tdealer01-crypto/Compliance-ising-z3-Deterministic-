@@ -1,5 +1,5 @@
 {
   "name": "z3-compliance-review",
-  "description": "Z3 formal constraint verification and compliance review logic.",
+  "description": "Submit policy candidates to the DSG backend, inspect real Z3 SAT/UNSAT results, and verify proof/audit hashes.",
   "strict": true
 }

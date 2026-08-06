@@ -1,0 +1,16 @@
+services:
+  dsg-compliance-backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      AUDIT_DB_PATH: /data/dsg_audit.sqlite3
+      DSG_API_KEY: ${DSG_API_KEY:-}
+      PROOF_SIGNING_SECRET: ${PROOF_SIGNING_SECRET:-}
+    volumes:
+      - dsg-audit-data:/data
+    restart: unless-stopped
+
+volumes:
+  dsg-audit-data:

@@ -1,13 +1,22 @@
 package com.example.data.mcp
 
+import com.example.BuildConfig
+import com.example.data.qubo.Constraint
 import com.example.data.qubo.PolicyRule
 import com.example.data.qubo.QuboSolution
-import kotlinx.coroutines.delay
-import org.json.JSONArray
-import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
+import org.json.JSONObject
 
 enum class McpEndpointType(
     val id: String,
@@ -15,11 +24,12 @@ enum class McpEndpointType(
     val defaultUrl: String,
     val providerName: String
 ) {
-    OPENAI("openai", "OpenAI (GPT-4o / o3-mini)", "https://api.openai.com/v1/mcp/context", "OpenAI Inc."),
-    ANTHROPIC("anthropic", "Anthropic (Claude 3.5 Sonnet)", "https://api.anthropic.com/v1/mcp/tools", "Anthropic PBC"),
-    ZAPIER("zapier", "Zapier / Zipper Automation", "https://hooks.zapier.com/v1/mcp/triggers", "Zapier Inc."),
-    STRIPE("stripe", "Stripe Compliance & Payments", "https://api.stripe.com/v1/mcp/compliance", "Stripe Inc."),
-    AWS("aws", "AWS Bedrock & Cloud Audit", "https://bedrock-runtime.us-east-1.amazonaws.com/mcp", "Amazon Web Services")
+    DSG_BACKEND(
+        "dsg_backend",
+        "DSG Backend Verification",
+        BuildConfig.DSG_BACKEND_BASE_URL,
+        "Server-side Z3 + MCP"
+    )
 }
 
 data class McpEndpointStatus(
@@ -37,108 +47,167 @@ data class McpDispatchResult(
     val timestamp: String,
     val payloadHash: String,
     val statusMessage: String,
-    val rawJsonResponse: String
+    val rawJsonResponse: String,
+    val httpStatusCode: Int,
+    val z3Status: String?,
+    val proofHash: String?,
+    val auditEventHash: String?
 )
 
 object McpGatewayEngine {
 
-    val AVAILABLE_ENDPOINTS = listOf(
-        McpEndpointType.OPENAI,
-        McpEndpointType.ANTHROPIC,
-        McpEndpointType.ZAPIER,
-        McpEndpointType.STRIPE,
-        McpEndpointType.AWS
-    )
+    val AVAILABLE_ENDPOINTS = listOf(McpEndpointType.DSG_BACKEND)
 
-    fun buildMcpProtocolJson(
+    private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(15, TimeUnit.SECONDS)
+        .build()
+
+    private fun normalizeBaseUrl(value: String): String = value.trim().trimEnd('/')
+
+    private fun constraintJson(constraint: Constraint): JSONObject = JSONObject().apply {
+        put("description", constraint.description)
+        when (constraint) {
+            is Constraint.Implication -> {
+                put("type", "implication")
+                put("if_rule", constraint.ifRule)
+                put("then_rule", constraint.thenRule)
+            }
+            is Constraint.Equivalence -> {
+                put("type", "equivalence")
+                put("rules", JSONArray(constraint.rules))
+            }
+            is Constraint.MinActive -> {
+                put("type", "min_active")
+                put("minimum", constraint.minimum)
+            }
+            is Constraint.MaxCost -> {
+                put("type", "max_cost")
+                put("budget", constraint.budget)
+            }
+            is Constraint.MutualExclusion -> {
+                put("type", "mutual_exclusion")
+                put("rules", JSONArray(constraint.rules))
+            }
+            is Constraint.AtLeastOneOf -> {
+                put("type", "at_least_one_of")
+                put("rules", JSONArray(constraint.rules))
+            }
+        }
+    }
+
+    fun buildVerificationRequestJson(
         presetName: String,
         solution: QuboSolution,
-        rules: List<PolicyRule>
-    ): JSONObject {
-        val root = JSONObject()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+        rules: List<PolicyRule>,
+        constraints: List<Constraint>
+    ): JSONObject = JSONObject().apply {
+        put("request_id", UUID.randomUUID().toString())
+        put("preset_name", presetName)
+        put("configuration", JSONArray(solution.configuration))
+        put("client_name", "dsg-android")
+        put("client_version", BuildConfig.VERSION_NAME)
 
-        root.put("jsonrpc", "2.0")
-        root.put("protocol_version", "2024-11-05")
-        root.put("client_info", JSONObject().apply {
-            put("name", "DSG QUBO & Ising Policy Solver Engine")
-            put("version", "2.0.0")
-            put("security_level", "LEVEL-5 Formal Proof")
-        })
-
-        // Context Payload
-        val contextObj = JSONObject().apply {
-            put("preset_domain", presetName)
-            put("solver_type", "QUBO_ISING_DETERMINISTIC_ANNEALING")
-            put("qubo_energy", solution.quboEnergy)
-            put("all_constraints_satisfied", solution.allConstraintsSatisfied)
-            put("total_cost", solution.totalCost)
-            put("risk_reduction_pct", solution.totalRiskReduction)
-            put("solution_hash", solution.solutionHash)
-            put("timestamp", dateFormat.format(Date()))
-
-            // Active Rules Matrix
-            val activeRulesArray = JSONArray()
-            solution.activeRules.forEach { rule ->
-                val ruleObj = JSONObject().apply {
-                    put("rule_id", rule.id)
-                    put("rule_code", rule.name)
-                    put("category", rule.category)
+        put("rules", JSONArray().apply {
+            rules.forEach { rule ->
+                put(JSONObject().apply {
+                    put("id", rule.id)
+                    put("name", rule.name)
                     put("cost", rule.cost)
                     put("risk_reduction", rule.riskReduction)
+                    put("business_value", rule.businessValue)
+                    put("category", rule.category)
                     put("description", rule.description)
-                }
-                activeRulesArray.put(ruleObj)
+                })
             }
-            put("active_policy_rules", activeRulesArray)
+        })
 
-            // Formal Z3 Verification Proof
-            val unsatisfiedList = solution.constraintResults.filter { !it.satisfied }
-            val z3ProofObj = JSONObject().apply {
-                put("smt_solver", "Z3 SMT Solver v4.12")
-                put("status", if (solution.allConstraintsSatisfied) "SAT" else "UNSAT")
-                put("unsat_core_count", unsatisfiedList.size)
-                val violationsArray = JSONArray()
-                unsatisfiedList.forEach { violationsArray.put(it.detail) }
-                put("violations", violationsArray)
-            }
-            put("formal_verification_proof", z3ProofObj)
-        }
+        put("constraints", JSONArray().apply {
+            constraints.forEach { put(constraintJson(it)) }
+        })
 
-        root.put("context", contextObj)
-        return root
+        put("solver", JSONObject().apply {
+            put("seed", solution.seed)
+            put("iterations", solution.iterations)
+            put("qubo_energy", solution.quboEnergy)
+            put("solution_hash", solution.solutionHash)
+        })
     }
 
     suspend fun dispatchToEndpoint(
         endpoint: McpEndpointType,
         presetName: String,
         solution: QuboSolution,
-        rules: List<PolicyRule>
-    ): McpDispatchResult {
-        // Simulate real high-speed network round-trip delay (15ms - 45ms)
-        delay(35)
+        rules: List<PolicyRule>,
+        constraints: List<Constraint>
+    ): McpDispatchResult = withContext(Dispatchers.IO) {
+        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+        val startedAt = System.nanoTime()
+        val payload = buildVerificationRequestJson(presetName, solution, rules, constraints)
+        val verifyUrl = "${normalizeBaseUrl(endpoint.defaultUrl)}/v1/verify"
 
-        val mcpJson = buildMcpProtocolJson(presetName, solution, rules)
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        val timestamp = dateFormat.format(Date())
+        try {
+            val requestBuilder = Request.Builder()
+                .url(verifyUrl)
+                .post(payload.toString().toRequestBody(jsonMediaType))
+                .header("Accept", "application/json")
 
-        val responseJson = JSONObject().apply {
-            put("mcp_status", "ACCEPTED_200")
-            put("provider", endpoint.providerName)
-            put("endpoint_url", endpoint.defaultUrl)
-            put("received_hash", solution.solutionHash)
-            put("formal_compliance", "VERIFIED_100_PERCENT")
-            put("action_triggered", "POLICY_STATE_SYNCHRONIZED")
-            put("latency_ms", 32)
+            if (BuildConfig.DSG_BACKEND_API_KEY.isNotBlank()) {
+                requestBuilder.header("X-API-Key", BuildConfig.DSG_BACKEND_API_KEY)
+            }
+
+            httpClient.newCall(requestBuilder.build()).execute().use { response ->
+                val elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt)
+                val bodyText = response.body?.string().orEmpty()
+                val responseJson = runCatching { JSONObject(bodyText) }.getOrNull()
+                val z3Status = responseJson?.optString("z3_status")?.takeIf { it.isNotBlank() }
+                val accepted = response.isSuccessful && responseJson?.optBoolean("accepted", false) == true
+                val proofHash = responseJson?.optString("proof_hash")?.takeIf { it.isNotBlank() }
+                val auditEventHash = responseJson
+                    ?.optJSONObject("audit")
+                    ?.optString("event_hash")
+                    ?.takeIf { it.isNotBlank() }
+                val errorDetail = responseJson?.optString("detail")?.takeIf { it.isNotBlank() }
+                val statusMessage = when {
+                    accepted -> "Server-side Z3 verification SAT (${elapsedMs} ms)"
+                    errorDetail != null -> "Backend rejected request: $errorDetail"
+                    z3Status != null -> "Server-side Z3 verification $z3Status (${elapsedMs} ms)"
+                    else -> "Backend returned HTTP ${response.code} (${elapsedMs} ms)"
+                }
+
+                McpDispatchResult(
+                    success = accepted,
+                    endpoint = endpoint,
+                    timestamp = timestamp,
+                    payloadHash = proofHash ?: solution.solutionHash,
+                    statusMessage = statusMessage,
+                    rawJsonResponse = responseJson?.toString(2) ?: bodyText,
+                    httpStatusCode = response.code,
+                    z3Status = z3Status,
+                    proofHash = proofHash,
+                    auditEventHash = auditEventHash
+                )
+            }
+        } catch (error: Exception) {
+            val errorJson = JSONObject().apply {
+                put("error", error::class.java.simpleName)
+                put("message", error.message ?: "Unknown backend error")
+                put("endpoint", verifyUrl)
+            }
+            McpDispatchResult(
+                success = false,
+                endpoint = endpoint,
+                timestamp = timestamp,
+                payloadHash = solution.solutionHash,
+                statusMessage = "Backend request failed: ${error.message ?: error::class.java.simpleName}",
+                rawJsonResponse = errorJson.toString(2),
+                httpStatusCode = 0,
+                z3Status = null,
+                proofHash = null,
+                auditEventHash = null
+            )
         }
-
-        return McpDispatchResult(
-            success = true,
-            endpoint = endpoint,
-            timestamp = timestamp,
-            payloadHash = solution.solutionHash,
-            statusMessage = "Synced to ${endpoint.displayName} via MCP Protocol v2.0",
-            rawJsonResponse = responseJson.toString(2)
-        )
     }
 }

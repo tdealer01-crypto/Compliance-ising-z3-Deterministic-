@@ -377,16 +377,20 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
         val sol = _quboSolution.value ?: return
         viewModelScope.launch {
             _isMcpDispatching.value = true
-            val result = McpGatewayEngine.dispatchToEndpoint(
-                endpoint = endpoint,
-                presetName = _activePreset.value,
-                solution = sol,
-                rules = _quboRules.value
-            )
-            val updated = _mcpDispatchResults.value.toMutableMap()
-            updated[endpoint] = result
-            _mcpDispatchResults.value = updated
-            _isMcpDispatching.value = false
+            try {
+                val result = McpGatewayEngine.dispatchToEndpoint(
+                    endpoint = endpoint,
+                    presetName = _activePreset.value,
+                    solution = sol,
+                    rules = _quboRules.value,
+                    constraints = _quboConstraints.value
+                )
+                val updated = _mcpDispatchResults.value.toMutableMap()
+                updated[endpoint] = result
+                _mcpDispatchResults.value = updated
+            } finally {
+                _isMcpDispatching.value = false
+            }
         }
     }
 }

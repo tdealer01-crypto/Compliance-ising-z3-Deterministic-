@@ -1,8 +1,8 @@
 {
   "name": "ising-agent",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "owner": "tdealer01-crypto",
-  "description": "Z3 deterministic compliance verification, QUBO policy optimization, and MCP gateway operations.",
+  "description": "Android QUBO policy client with real server-side Z3 verification, proof audit chain, and MCP Streamable HTTP backend.",
   "strict": true,
   "environments": [
     {

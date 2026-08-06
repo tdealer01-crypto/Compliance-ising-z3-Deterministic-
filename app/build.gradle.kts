@@ -9,6 +9,16 @@ plugins {
   alias(libs.plugins.google.services)
 }
 
+fun String.asBuildConfigLiteral(): String =
+  "\"" + replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+
+val dsgBackendBaseUrl = (providers.gradleProperty("ANDROID_DSG_BACKEND_BASE_URL").orNull
+  ?: System.getenv("ANDROID_DSG_BACKEND_BASE_URL")
+  ?: "http://10.0.2.2:8000/").let { if (it.endsWith("/")) it else "$it/" }
+val dsgBackendApiKey = providers.gradleProperty("ANDROID_DSG_BACKEND_API_KEY").orNull
+  ?: System.getenv("ANDROID_DSG_BACKEND_API_KEY")
+  ?: ""
+
 android {
   namespace = "com.example"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
@@ -19,6 +29,9 @@ android {
     targetSdk = 36
     versionCode = 3
     versionName = "3.0"
+
+    buildConfigField("String", "DSG_BACKEND_BASE_URL", dsgBackendBaseUrl.asBuildConfigLiteral())
+    buildConfigField("String", "DSG_BACKEND_API_KEY", dsgBackendApiKey.asBuildConfigLiteral())
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

@@ -1,0 +1,41 @@
+name: Backend verification
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+      - "docker-compose.yml"
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+      - "docker-compose.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+      - name: Install backend
+        run: python -m pip install -e '.[dev]'
+      - name: Run tests
+        env:
+          AUDIT_DB_PATH: ${{ runner.temp }}/dsg-audit.sqlite3
+        run: pytest --cov=app --cov-report=term-missing
+      - name: Import ASGI and MCP application
+        env:
+          AUDIT_DB_PATH: ${{ runner.temp }}/dsg-audit-import.sqlite3
+        run: python -c "from app.main import app; print(app.title)"
