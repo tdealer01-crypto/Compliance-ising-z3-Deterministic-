@@ -10,8 +10,8 @@
       "name": "ising-agent",
       "source": "relative",
       "path": ".claude-plugin/plugins/ising-agent/plugin.json",
-      "version": "3.0.0",
-      "description": "Z3 deterministic compliance verification, QUBO policy optimization, and MCP gateway operations.",
+      "version": "4.0.0",
+      "description": "Android QUBO policy client with real server-side Z3 verification, tamper-evident audit proofs, and MCP Streamable HTTP.",
       "strict": true
     }
   ]

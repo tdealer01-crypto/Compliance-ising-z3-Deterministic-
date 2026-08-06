@@ -1,17 +1,22 @@
 {
   "name": "ising-agent",
-  "description": "Deterministic compliance engine environment: Kotlin/QUBO, Z3 constraints, and MCP gateway.",
+  "description": "DSG Android QUBO client with server-side Z3 verification and MCP backend.",
   "build": {
-    "command": "./gradlew :app:build",
+    "command": "python",
     "args": [
-      "--no-daemon"
+      "-m",
+      "pip",
+      "install",
+      "-e",
+      "backend[dev]"
     ]
   },
   "test": {
-    "command": "./gradlew :app:testDebugUnitTest",
+    "command": "python",
     "args": [
-      "--no-daemon",
-      "--stacktrace"
+      "-m",
+      "pytest",
+      "backend/tests"
     ]
   },
   "strict": true

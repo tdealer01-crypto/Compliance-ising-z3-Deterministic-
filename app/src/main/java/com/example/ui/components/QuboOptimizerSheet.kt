@@ -230,11 +230,11 @@ fun QuboOptimizerSheet(
                         ) {
                             Icon(
                                 imageVector = if (solution.allConstraintsSatisfied) Icons.Default.CheckCircle else Icons.Default.Error,
-                                contentDescription = "Z3 Verified Status",
+                                contentDescription = "Local constraint status",
                                 tint = if (solution.allConstraintsSatisfied) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onErrorContainer
                             )
                             Text(
-                                text = if (solution.allConstraintsSatisfied) "Z3 Formal Constraints: SATISFIED" else "Z3 Constraints: VIOLATED",
+                                text = if (solution.allConstraintsSatisfied) "Local Constraint Check: SATISFIED" else "Local Constraint Check: VIOLATED",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = if (solution.allConstraintsSatisfied) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onErrorContainer
@@ -337,7 +337,7 @@ fun QuboOptimizerSheet(
                         )
                     }
 
-                    // Tabs (Active Rules / Z3 Verification / What-If Analysis / Audit Chain)
+                    // Tabs (Active Rules / Local Verification / What-If Analysis / Audit Chain)
                     Column {
                         PrimaryTabRow(
                             selectedTabIndex = selectedTab,
@@ -351,7 +351,7 @@ fun QuboOptimizerSheet(
                             Tab(
                                 selected = selectedTab == 1,
                                 onClick = { selectedTab = 1 },
-                                text = { Text("Z3 Verification") }
+                                text = { Text("Local Check") }
                             )
                             Tab(
                                 selected = selectedTab == 2,
@@ -374,7 +374,7 @@ fun QuboOptimizerSheet(
 
                         when (selectedTab) {
                             0 -> ActiveRulesList(solution.activeRules, solution.inactiveRules)
-                            1 -> Z3VerificationList(solution.constraintResults)
+                            1 -> LocalVerificationList(solution.constraintResults)
                             2 -> CounterfactualSection(
                                 currentBudget = currentBudget,
                                 result = counterfactualResult,
@@ -515,7 +515,7 @@ private fun RuleItemCard(rule: PolicyRule, isActive: Boolean) {
 }
 
 @Composable
-private fun Z3VerificationList(results: List<com.example.data.qubo.ConstraintResult>) {
+private fun LocalVerificationList(results: List<com.example.data.qubo.ConstraintResult>) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         results.forEach { res ->
             Card(
@@ -659,14 +659,14 @@ private fun McpGatewaySection(
     ) {
         Column {
             Text(
-                text = "Model Context Protocol (MCP) Endpoints",
+                text = "DSG Backend & MCP Server",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "Export formal Z3 proof payloads & QUBO solution states to industry standard AI & cloud endpoints.",
+                text = "Send the exact candidate state to the configured backend for real server-side Z3 verification, proof hashing, and audit persistence. AI clients connect to the backend MCP endpoint.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -739,7 +739,7 @@ private fun McpGatewaySection(
                                         modifier = Modifier.size(12.dp)
                                     )
                                     Text(
-                                        text = "MCP SYNCED 200",
+                                        text = "Z3 SAT",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSecondary,
                                         fontWeight = FontWeight.Bold,
@@ -751,7 +751,7 @@ private fun McpGatewaySection(
                     }
 
                     Text(
-                        text = "Endpoint URL: ${endpoint.defaultUrl}",
+                        text = "Backend URL: ${endpoint.defaultUrl}",
                         style = MaterialTheme.typography.bodySmall,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 10.sp,
@@ -768,17 +768,31 @@ private fun McpGatewaySection(
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(
-                                    text = "✓ ${result.statusMessage}",
+                                    text = (if (result.success) "✓ " else "✕ ") + result.statusMessage,
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = if (result.success) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                                 )
                                 Text(
-                                    text = "Payload Hash: ${result.payloadHash.take(24)}...",
+                                    text = "Proof Hash: ${(result.proofHash ?: result.payloadHash).take(24)}...",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontFamily = FontFamily.Monospace,
                                     fontSize = 10.sp
                                 )
+                                Text(
+                                    text = "Z3 Status: ${result.z3Status ?: "NO RESPONSE"} · HTTP ${result.httpStatusCode}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 10.sp
+                                )
+                                result.auditEventHash?.let { auditHash ->
+                                    Text(
+                                        text = "Audit Event: ${auditHash.take(24)}...",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = 10.sp
+                                    )
+                                }
                                 Text(
                                     text = "Sync Time: ${result.timestamp}",
                                     style = MaterialTheme.typography.labelSmall,
@@ -805,7 +819,7 @@ private fun McpGatewaySection(
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Dispatching MCP Payload...", fontSize = 12.sp)
+                            Text("Calling backend Z3...", fontSize = 12.sp)
                         } else {
                             Icon(
                                 imageVector = Icons.Default.Send,
@@ -814,7 +828,7 @@ private fun McpGatewaySection(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (result != null) "Re-Sync to ${endpoint.displayName}" else "Sync via MCP Protocol v2.0",
+                                text = if (result != null) "Verify Again" else "Verify with Backend Z3",
                                 fontSize = 12.sp
                             )
                         }

@@ -1,6 +1,6 @@
 {
   "name": "compliance-agent",
-  "description": "Agent for deterministic QUBO and Z3 compliance workflows.",
+  "description": "Agent for QUBO candidate review using the DSG server-side Z3 verification and MCP backend.",
   "skills": [
     "skills/z3-compliance-review/SKILL.json"
   ]

@@ -16,3 +16,12 @@
 local.properties
 .env
 debug.keystore
+
+# Python/backend runtime files
+backend/.venv/
+backend/.data/
+backend/**/__pycache__/
+backend/.pytest_cache/
+backend/.coverage
+backend/*.egg-info/
+*.sqlite3
