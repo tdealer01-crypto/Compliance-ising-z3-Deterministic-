@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -76,6 +77,7 @@ import com.example.ui.components.TaskItemCard
 @Composable
 fun TaskTrackerScreen(
     viewModel: TaskViewModel,
+    onNavigateToChat: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
@@ -132,6 +134,16 @@ fun TaskTrackerScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = onNavigateToChat,
+                        modifier = Modifier.testTag("open_chat_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = "Gemini Chat",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     IconButton(
                         onClick = { viewModel.openQuboSheet() },
                         modifier = Modifier.testTag("open_qubo_optimizer_button")
@@ -350,6 +362,21 @@ fun TaskTrackerScreen(
                             onStartFocus = { viewModel.openFocusTimer(task) }
                         )
                     }
+                }
+                
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { viewModel.suggestTasks() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("AI Suggest Task")
+                    }
+                    Spacer(modifier = Modifier.height(80.dp)) // Padding for FAB
                 }
             }
         }

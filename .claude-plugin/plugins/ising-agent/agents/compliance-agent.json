@@ -1,7 +1,0 @@
-{
-  "name": "compliance-agent",
-  "description": "Agent for deterministic QUBO and Z3 compliance workflows.",
-  "skills": [
-    "skills/z3-compliance-review/SKILL.json"
-  ]
-}

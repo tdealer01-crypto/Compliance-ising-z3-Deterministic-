@@ -23,44 +23,148 @@ class TaskRepository(private val taskDao: TaskDao) {
         if (currentTasks.isEmpty()) {
             val defaultTasks = listOf(
                 TaskEntity(
-                    title = "Complete Team Sprint Planning",
-                    description = "Review roadmap milestones, prioritize backlog tickets, and assign tasks.",
+                    title = "Code review completed",
+                    description = "Pre-Launch checklist item",
                     category = "Work",
                     priority = "High",
-                    isCompleted = false,
-                    estimatedMinutes = 45
-                ),
-                TaskEntity(
-                    title = "Morning 30-Min Cardio & Stretching",
-                    description = "Hydrate, do 15 mins jog followed by full body flexibility routine.",
-                    category = "Health",
-                    priority = "Medium",
                     isCompleted = true,
                     estimatedMinutes = 30
                 ),
                 TaskEntity(
-                    title = "Read 2 Chapters of Design Patterns",
-                    description = "Focus on Creational and Structural patterns with code examples.",
-                    category = "Study",
+                    title = "Unit tests passing",
+                    description = "Pre-Launch checklist item",
+                    category = "Work",
                     priority = "High",
-                    isCompleted = false,
-                    estimatedMinutes = 35
+                    isCompleted = true,
+                    estimatedMinutes = 30
                 ),
                 TaskEntity(
-                    title = "Review Monthly Savings & Investments",
-                    description = "Check portfolio performance, pay recurring bills, and record expense log.",
-                    category = "Finance",
+                    title = "Integration tests passing",
+                    description = "Pre-Launch checklist item",
+                    category = "Work",
+                    priority = "High",
+                    isCompleted = true,
+                    estimatedMinutes = 45
+                ),
+                TaskEntity(
+                    title = "Documentation updated",
+                    description = "Pre-Launch checklist item",
+                    category = "Work",
                     priority = "Medium",
-                    isCompleted = false,
-                    estimatedMinutes = 20
+                    isCompleted = true,
+                    estimatedMinutes = 60
                 ),
                 TaskEntity(
-                    title = "Plan Weekend Family Outing",
-                    description = "Research nearby parks, book tickets, and organize packing list.",
-                    category = "Personal",
+                    title = "Security review done",
+                    description = "Pre-Launch checklist item",
+                    category = "Work",
+                    priority = "High",
+                    isCompleted = true,
+                    estimatedMinutes = 120
+                ),
+                TaskEntity(
+                    title = "Performance benchmarks met",
+                    description = "Pre-Launch checklist item",
+                    category = "Work",
+                    priority = "Medium",
+                    isCompleted = true,
+                    estimatedMinutes = 60
+                ),
+                TaskEntity(
+                    title = "Deploy to production",
+                    description = "Launch Day checklist item",
+                    category = "Work",
+                    priority = "High",
+                    isCompleted = true,
+                    estimatedMinutes = 120
+                ),
+                TaskEntity(
+                    title = "Monitor error rates",
+                    description = "Launch Day checklist item",
+                    category = "Work",
+                    priority = "High",
+                    isCompleted = true,
+                    estimatedMinutes = 60
+                ),
+                TaskEntity(
+                    title = "Monitor latency metrics",
+                    description = "Launch Day checklist item",
+                    category = "Work",
+                    priority = "Medium",
+                    isCompleted = true,
+                    estimatedMinutes = 60
+                ),
+                TaskEntity(
+                    title = "Announce to stakeholders",
+                    description = "Launch Day checklist item",
+                    category = "Work",
                     priority = "Low",
-                    isCompleted = false,
+                    isCompleted = true,
                     estimatedMinutes = 15
+                ),
+                TaskEntity(
+                    title = "Update status page",
+                    description = "Launch Day checklist item",
+                    category = "Work",
+                    priority = "Medium",
+                    isCompleted = true,
+                    estimatedMinutes = 15
+                ),
+                TaskEntity(
+                    title = "Verify rollback plan ready",
+                    description = "Launch Day checklist item",
+                    category = "Work",
+                    priority = "High",
+                    isCompleted = true,
+                    estimatedMinutes = 30
+                ),
+                TaskEntity(
+                    title = "Schedule retrospective",
+                    description = "Post-Launch checklist item",
+                    category = "Work",
+                    priority = "Low",
+                    isCompleted = true,
+                    estimatedMinutes = 15
+                ),
+                TaskEntity(
+                    title = "Review success metrics",
+                    description = "Post-Launch checklist item",
+                    category = "Work",
+                    priority = "Medium",
+                    isCompleted = true,
+                    estimatedMinutes = 60
+                ),
+                TaskEntity(
+                    title = "Close out JIRA tickets",
+                    description = "Post-Launch checklist item",
+                    category = "Work",
+                    priority = "Low",
+                    isCompleted = true,
+                    estimatedMinutes = 45
+                ),
+                TaskEntity(
+                    title = "Archive feature branch",
+                    description = "Post-Launch checklist item",
+                    category = "Work",
+                    priority = "Low",
+                    isCompleted = true,
+                    estimatedMinutes = 15
+                ),
+                TaskEntity(
+                    title = "Update runbooks",
+                    description = "Post-Launch checklist item",
+                    category = "Work",
+                    priority = "Medium",
+                    isCompleted = true,
+                    estimatedMinutes = 60
+                ),
+                TaskEntity(
+                    title = "Celebrate the team 🎉",
+                    description = "Post-Launch checklist item",
+                    category = "Personal",
+                    priority = "High",
+                    isCompleted = true,
+                    estimatedMinutes = 120
                 )
             )
             defaultTasks.forEach { taskDao.insertTask(it) }

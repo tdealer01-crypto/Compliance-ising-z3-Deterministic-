@@ -1,5 +1,6 @@
 package com.example.ui
 
+import com.example.data.gemini.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.FocusSessionEntity
@@ -98,13 +99,12 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            repository.checkAndPrepopulateDefaultTasks()
             runQuboOptimization()
         }
     }
 
     val tasks: StateFlow<List<TaskEntity>> = combine(
-        repository.allTasks,
+        repository.getAllTasks(),
         _selectedCategory,
         _searchQuery,
         _filterType
@@ -126,13 +126,13 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
         initialValue = emptyList()
     )
 
-    val allRawTasks: StateFlow<List<TaskEntity>> = repository.allTasks.stateIn(
+    val allRawTasks: StateFlow<List<TaskEntity>> = repository.getAllTasks().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
-    val focusSessions: StateFlow<List<FocusSessionEntity>> = repository.allFocusSessions.stateIn(
+    val focusSessions: StateFlow<List<FocusSessionEntity>> = repository.getAllFocusSessions().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
@@ -387,6 +387,30 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
             updated[endpoint] = result
             _mcpDispatchResults.value = updated
             _isMcpDispatching.value = false
+        }
+    }
+
+    fun suggestTasks() {
+        viewModelScope.launch {
+            val currentTasksText = allRawTasks.value.take(5).joinToString("\n") { "${it.title}: ${it.description}" }
+            val prompt = "Based on these tasks:\n$currentTasksText\nSuggest 1 new logical next step task. Output ONLY the task title."
+            
+            try {
+                val response = RetrofitClient.service.generateContent(
+                    model = "gemini-3.1-flash-lite", // Fast action
+                    apiKey = com.example.BuildConfig.GEMINI_API_KEY,
+                    request = GenerateContentRequest(
+                        contents = listOf(Content(parts = listOf(Part(text = prompt)), role = "user"))
+                    )
+                )
+                
+                val text = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text?.trim()
+                if (!text.isNullOrBlank()) {
+                    repository.insertTask(com.example.data.TaskEntity(title = text, category = "Personal"))
+                }
+            } catch (e: Exception) {
+                // Ignore for now
+            }
         }
     }
 }
