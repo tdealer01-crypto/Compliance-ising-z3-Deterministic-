@@ -6,7 +6,7 @@ description: >-
 
 # Unified MCP Runtime Reference — v1.2.0
 
-> **Status: PASS for discovery; REVIEW for authenticated execution.** This page is generated from the live Render registry. It replaces the unmerged PR #1088 interface list as the production reference.
+> **Status: PASS for discovery; REVIEW for authenticated execution.** This page is generated from the live Render registry. It replaces the closed-without-merge PR #1088 interface list; draft PR #1095 carries the current repository copy.
 
 ## Start here
 
@@ -160,4 +160,4 @@ The descriptions and required fields below came from the runtime registry at ver
 * The anonymous 401 proves the tested auth boundary denied the request; it is not a successful tool execution.
 * `SAT` proves feasibility of the encoded constraints only, unless optimality is separately encoded and proved.
 * Dispatch or queue success remains **REVIEW** until provider/runtime postconditions and audit evidence are verified.
-* PR #1088 is an open draft, is behind current `main`, and its old tool names are not the live v1.2.0 registry names.
+* PR #1088 is **closed without merge** and superseded by draft PR #1095; its old tool names are not the live v1.2.0 registry names.
