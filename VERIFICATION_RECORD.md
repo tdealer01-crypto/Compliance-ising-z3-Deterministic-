@@ -4,37 +4,77 @@ description: Current deployment, health, readiness, MCP and claim-boundary evide
 
 # Verification record
 
-> **Current overall status: REVIEW.** Render deployment, health, readiness and MCP discovery have direct runtime evidence. Authenticated MCP execution, external providers and certification claims remain unverified.
+**Last documentation review:** 1 September 2026
 
-_Last checked: 2026-08-13 UTC_
+This page separates **verified repository/deployment evidence** from configuration or historical integration status.
 
-## Evidence matrix
+## Control Plane
 
-| Item                        | Status            | Observed result                                                                                                   | Boundary                                                     |
-| --------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| PR #1093                    | **PASS**          | Merged to `main`; merge commit `69c6204e04363ea9a5c4f20721c2757907180337`.                                        | Merge evidence only.                                         |
-| Render deploy               | **PASS**          | `dep-d9uhm27qj5pc73fk4fgg` reached `live` at `2026-08-13T01:20:19.568323Z`.                                       | Deployment is not full feature verification.                 |
-| `GET /api/health`           | **PASS**          | HTTP 200; `ok/core_ok/db_ok=true`; request ID `054bdafa-ed4d-40bd-b74c-f1764967e8a3`.                             | One observed request.                                        |
-| `GET /api/readiness`        | **PASS**          | HTTP 200; seven named checks returned `ok=true`; request ID `47d63cda-6fe8-4715-8477-58678751031d`.               | One observed request.                                        |
-| MCP initialize              | **PASS**          | JSON-RPC protocol `2024-11-05`; server v1.2.0; request ID `f44753c7-a377-4348-898f-af1cc2d996b4`.                 | Protocol handshake only.                                     |
-| MCP tools/list              | **PASS**          | HTTP 200; 65 tools; request ID `6c6d95dd-377e-44f6-a980-5ac1706786c9`.                                            | Discovery only.                                              |
-| Anonymous MCP tool call     | **PASS — denied** | `dsg.system.status` returned HTTP 401 / `-32001 Unauthorized`; request ID `dd292674-fb22-437d-86b3-4b842a6de79f`. | Confirms tested denial, not authenticated execution.         |
-| Authenticated MCP execution | **REVIEW**        | No existing session/key was available to this verifier.                                                           | Requires a valid credential and audit/execution receipt.     |
-| PR #1088                    | **CLOSED**        | Closed without merge; superseded by PR #1095. Its historical CI Security run failed with 3 Gitleaks findings.     | Historical proposal only; not production interface evidence. |
-| PR #1095                    | **REVIEW**        | Draft replacement created from current `main`; commit `3414c92156a39699c071030e8faf86e575437a81`.                 | Documentation PR; not merged or deployed runtime evidence.   |
-| External providers          | **UNVERIFIED**    | No credential-safe response artifact was collected in this run.                                                   | No success claim.                                            |
-| Certification/compliance    | **BLOCK**         | No issuer/audit/legal evidence verified.                                                                          | Use internal alignment language only.                        |
+### Verified from current repository
 
-## What users can rely on
+* Production provider is configured as `AZURE_APP_SERVICE`.
+* Production URL is `https://dsg-control-plane.azurewebsites.net`.
+* Health probe is `/api/health`.
+* Production deployment is enabled through the governed Azure deployment adapter.
+* Rollback target is a staging-slot reverse swap.
+* Vercel and Render are explicitly marked as inactive production targets.
+* Latest inspected main commit: `0680e134e7cdf518df922c3f72a2765f837bd7f1` — `fix(ci): point daily health monitoring at Azure (#1208)`.
 
-* The exact #1093 merge commit is live on the recorded Render deploy.
-* Health and readiness answered successfully for the recorded requests.
-* The live MCP endpoint advertised 65 tools and denied the tested anonymous tool call.
-* Anything not listed as PASS above remains REVIEW, BLOCK or UNVERIFIED.
+### Claim boundary
 
-## Required next evidence
+The production target configuration itself says:
 
-1. Perform one authorized read-only `dsg.system.status` call using an existing DSG credential.
-2. Capture its HTTP status, request/correlation ID, structured result and audit/execution identifier.
-3. Verify Render health-check configuration uses `/api/health`.
-4. Verify high-risk tools only after explicit approval and provider postcondition evidence.
+`BOUND_FAIL_CLOSED_LIVE_VERIFICATION_REQUIRED`
+
+Therefore **FULL LIVE E2E PASS is not asserted here** without a current green governed production workflow plus live runtime/database evidence.
+
+### Legacy integration noise
+
+GitHub commit status for the latest inspected commit still contains failures/pending states from Vercel and Railway integrations. Those statuses are not treated as Control Plane production authority because the current repository configuration binds production to Azure. They should be removed or disabled separately to prevent operational confusion.
+
+## Cinema Proof Agent
+
+Repository evidence dated **28 August 2026** records:
+
+* production deploy GitHub Actions run `33189890939` — PASS
+* external production MCP proof run `33198810484` — PASS
+* Cinema endpoint: `https://dsg-cinema-production.nicetree-a005fe99.westus3.azurecontainerapps.io`
+* MCP endpoint: `/api/v1/mcp`
+* native Z3 verifier endpoint: `https://dsg-z3-verifier-production.nicetree-a005fe99.westus3.azurecontainerapps.io`
+* direct Z3 proof and Cinema proof matched for the recorded production proof
+* replay match recorded as true
+
+These are dated release proofs, not a guarantee that every endpoint remains healthy at the moment this page is read.
+
+## AGI Simulation
+
+Verified repository policy:
+
+* Azure is the production authority.
+* Simulation may search, score, reject and propose candidates.
+* Simulation cannot self-promote.
+* Cinema performs independent raw-evidence verification.
+* Control Plane is the canonical promotion authority.
+* Unresolved Azure Key Vault references are expected to fail closed.
+
+## DSG ONE V1
+
+The current README declares Azure-only production authority and explicitly states that the current live hostname must be resolved from a governed deployment receipt rather than asserted without evidence.
+
+Its older test/evidence section is dated May 2026 and should not be interpreted as proof of September 2026 production state.
+
+## Verification policy
+
+Use this hierarchy when making claims:
+
+```
+current live runtime + exact deployment identity + persisted evidence
+        >
+current CI / deployment evidence
+        >
+repository configuration
+        >
+historical documentation
+```
+
+If evidence is missing, report the state as `UNVERIFIED`, `REVIEW`, `BLOCKED`, or otherwise according to the active policy. Do not upgrade missing evidence into success.

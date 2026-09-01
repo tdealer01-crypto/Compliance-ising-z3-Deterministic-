@@ -4,43 +4,124 @@ description: >-
   requirement.
 ---
 
-# 🛡️ DSG QUBO & Ising Solver — Evidence-First Status
+# 🛡️ DSG Docs — Governed AI Execution
 
-> **Overall status: REVIEW.** The current Render deployment is reachable and its health, readiness and MCP discovery endpoints passed direct checks. This does not prove every solver, integration, payment or external action.
+DSG is a governance and evidence layer for AI agents, MCP servers, API workflows, CI/CD automation, and autonomous runtimes.
 
-_Last verified: 2026-08-13 UTC_
+The goal is simple: **let approved work execute, block unsupported or out-of-plan actions, and preserve evidence of what actually happened.**
 
-## What users can use now
+## What DSG does
 
-| Surface                | Status            | Where to look                                             | What the result means                                                        |
-| ---------------------- | ----------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Render service         | **PASS**          | `https://tdealer01-crypto-dsg-control-plane.onrender.com` | Current production provider and deployed revision.                           |
-| Health                 | **PASS**          | `/api/health`                                             | Service, core and database checks returned healthy for the recorded request. |
-| Readiness              | **PASS**          | `/api/readiness`                                          | Seven readiness checks returned `ok=true`.                                   |
-| MCP discovery          | **PASS**          | `/api/mcp` or JSON-RPC `tools/list`                       | Live registry v1.2.0 advertised 65 tools.                                    |
-| Authenticated MCP call | **REVIEW**        | JSON-RPC `tools/call`                                     | Not verified in this run because no existing credential was available.       |
-| Anonymous MCP call     | **PASS — denied** | `dsg.system.status`                                       | Returned 401, confirming the tested request was not allowed.                 |
+```
+Your Agent / MCP / Automation
+            │
+            ▼
+     DSG Control Plane
+            │
+     ┌──────┴──────┐
+     │             │
+  OBSERVE        ENFORCE
+     │             │
+ Record only    Gate action
+     │             │
+     └──────┬──────┘
+            ▼
+       Existing System
+```
 
-## Current source and deployment
+### OBSERVE
 
-* PR #1093: merged
-* Merge commit: `69c6204e04363ea9a5c4f20721c2757907180337`
-* Render deploy: `dep-d9uhm27qj5pc73fk4fgg`
-* Deploy status: `live`
-* Deploy completed: `2026-08-13T01:20:19.568323Z`
-* Active deployment evidence on this page is **Render**, not Vercel.
+Use DSG as an evidence and audit layer without blocking the existing workflow. DSG records the action, plan alignment, permission state, evidence, and execution result.
 
-## Claim boundaries
+### ENFORCE
 
-| Claim area                      | Status              | Rule                                                                                                               |
-| ------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| QUBO/Ising candidate generation | **REVIEW**          | Publish performance only with commit-linked raw benchmark artifacts.                                               |
-| Z3 feasibility                  | **REVIEW**          | `SAT` proves the encoded candidate satisfies encoded constraints, not global optimality or legal correctness.      |
-| Revenue Autopilot               | **REVIEW**          | Code and deployment exist; scheduler runs, persistence and business outcomes require post-deploy receipts.         |
-| Third-party APIs                | **UNVERIFIED**      | No `200 OK` or connected claim without credential-safe response and correlation ID.                                |
-| PR #1088                        | **BLOCK for merge** | Draft, stale relative to `main`, security workflow failed and interface names do not match the live v1.2 registry. |
-| Certification/compliance        | **BLOCK**           | No certification/compliance claim without issuer, scope, audit and legal evidence.                                 |
+Use DSG as a pre-execution governance gate.
 
-## Next user-visible milestone
+```
+PASS               → execute
+BLOCKED            → stop; action is outside the approved plan/policy
+WAITING_PERMISSION → required authority is missing
+UNVERIFIED         → required evidence is missing
+FAILED             → execution or verification failed
+```
 
-One authenticated read-only MCP status call must return a structured result plus audit/execution evidence. Until then, use the registry to discover tools but do not present tool execution as verified.
+DSG must not block an action merely because governance exists. If an action is covered by the user-approved plan and the required permissions/constraints are satisfied, it should proceed.
+
+## What the operator sees
+
+The runtime experience is organized around five operational surfaces:
+
+1. **ACTION** — what the agent is attempting.
+2. **PLAN ALIGNMENT** — whether it belongs to the approved plan.
+3. **PERMISSION** — whether the executor has the required authority.
+4. **EVIDENCE** — what proves the result.
+5. **EXECUTION / AUDIT** — what actually happened and what was recorded.
+
+The operator should be able to answer: **What was requested? Was it approved? Was it permitted? What executed? What proves the result? What must happen next?**
+
+## Current production authority
+
+As of **1 September 2026**, the Control Plane repository binds production to **Azure App Service**.
+
+* Control Plane production URL: `https://dsg-control-plane.azurewebsites.net`
+* Health probe: `GET /api/health`
+* Deployment model: exact commit → container image → Azure Container Registry → staging slot → runtime/evidence verification → production promotion
+* Rollback: staging-slot reverse swap
+* Vercel and Render are **not active DSG production targets** for the Control Plane.
+
+The production target is configured as `BOUND_FAIL_CLOSED_LIVE_VERIFICATION_REQUIRED`. This means configuration alone is **not** evidence that the latest production deployment passed.
+
+## DSG Cinema Proof Agent
+
+Cinema is the deterministic verification/governance runtime used for proof-oriented execution.
+
+Current repository evidence dated **28 August 2026** records:
+
+* Cinema production: `https://dsg-cinema-production.nicetree-a005fe99.westus3.azurecontainerapps.io`
+* MCP: `https://dsg-cinema-production.nicetree-a005fe99.westus3.azurecontainerapps.io/api/v1/mcp`
+* Native Z3 verifier: `https://dsg-z3-verifier-production.nicetree-a005fe99.westus3.azurecontainerapps.io`
+* MCP transport: HTTP JSON-RPC 2.0, protocol `2025-06-18`
+* Production deployment proof and external MCP exact-select proof were recorded as PASS in GitHub Actions evidence for that dated release.
+
+Cinema separates caller intent from verifier judgment. Callers submit plans, actions, execution facts and evidence; DSG computes the governance/proof result. Caller-supplied verdicts are not accepted as proof.
+
+## DSG AGI Simulation
+
+The simulation system performs deterministic search, simulation, candidate admission and evidence generation. It **cannot authorize its own promotion**.
+
+```
+Simulation / candidate
+        ↓
+Cinema independent verification
+        ↓
+Control Plane promotion authority
+        ↓
+Governed merge / deployment
+```
+
+Production authority for the simulation stack is Azure. Runtime secrets are expected to be resolved through Azure Key Vault / Managed Identity; unresolved secret references are fail-closed.
+
+## Evidence-first rule
+
+Do not claim `production-ready`, `FULL LIVE E2E PASS`, certified compliance, successful deployment, verified proof, or external solver execution unless current evidence proves that specific claim.
+
+Configuration is not execution evidence. Source code is not production evidence. A successful command is not necessarily proof of the resulting external state.
+
+Useful evidence includes:
+
+* tests and CI output
+* deployment status
+* runtime API responses
+* database records
+* commit SHA / image digest
+* audit records
+* proof receipts
+* replay verification
+
+## Current documentation note
+
+This GitBook space was previously synced from the `Compliance-ising-z3-Deterministic-` repository and still contains legacy QUBO/Ising-oriented pages. This overview has been updated to represent the broader DSG product and current Azure governance model. Legacy pages should be treated according to their own dated evidence until they are migrated or replaced.
+
+***
+
+**DSG Control Plane — govern the action, preserve the evidence, verify the result.**
