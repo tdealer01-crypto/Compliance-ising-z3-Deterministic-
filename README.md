@@ -1,159 +1,101 @@
 ---
 description: >-
-  Current DSG ONE product map, Azure production authority, Cinema runtime entry
-  point, and evidence-first claim boundaries.
+  Current DSG ONE product map, verified AWS production authority, current
+  Spacetime/Cinema runtime state, and evidence-first claim boundaries.
 ---
 
 # 🛡️ DSG Docs — Governed AI Execution
 
 **Canonical product domain:** https://www.dsg.pics
 
-DSG ONE is a governance, execution, and evidence layer for AI agents, MCP clients, API workflows, CI/CD automation, and autonomous runtimes.
+DSG ONE is a governance, execution, orchestration, and evidence system for AI agents, MCP clients, API workflows, CI/CD automation, and autonomous runtimes.
 
-The core rule is simple: **approved work should execute through the authorized boundary; out-of-plan work should stop; missing capabilities should remain waiting rather than being misclassified; and every important result should carry evidence.**
+The operating rule is: **approved work executes only through the authorized boundary; out-of-plan work stops; missing capabilities remain waiting; and production claims require runtime evidence.**
 
-## Current production architecture
+### Current production truth — 2 October 2026
+
+| Surface                                      | Verified current state                                                                                                |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| AWS host                                     | EC2 `i-01a2ee90890a558c3`, `t3.small`, `us-east-1a`, running; instance/system/EBS reachability passed                 |
+| SSM                                          | Managed instance is Online                                                                                            |
+| DSG ONE V1                                   | `aws-dsg-one-v1-1` healthy; `GET /api/agent/status` HTTP 200                                                          |
+| DSG ONE source                               | `ea70fbecdde020b0a4d4e44180798418af209f27`                                                                            |
+| DSG ONE image                                | `sha256:2b79455abf1a4d8b29abccb384e55fe83f82d8b44a117fe86133a7024dfa06ad`                                             |
+| Automation engine                            | Microsoft Agent Framework `1.18.0`; process, DB, automation DB, deployment identity and automation engine checks true |
+| Spacetime                                    | `aws-spacetime-1` healthy; `/health` HTTP 200                                                                         |
+| Spacetime image                              | `sha256:5087dcc08956e0618036aa7889f9dbb875f74dfcca661b1b354249b153099e35`                                             |
+| Cinema                                       | `aws-cinema-1` healthy; `/health` returns `status=ready`, `backend=ready`                                             |
+| Cinema image                                 | `sha256:b876f7bb86a8eb86a4c732a07a706c217993092da4054bc1fac205c4ca78b3c3`                                             |
+| Governed RDC acceptance                      | PASS in governed activation run `36991572295`                                                                         |
+| Authenticated Workroom user E2E              | OPEN                                                                                                                  |
+| Promoted-source public governed MCP closeout | PARTIAL / OPEN                                                                                                        |
+| Promoted-source XR state smoke               | OPEN                                                                                                                  |
+| Whole-system live runtime release            | `PENDING_REVERIFY`; do not upgrade scoped PASS results into whole-system PASS                                         |
+
+The generic paths `/api/health`, `/api/readiness`, and `/api/v1/status` on the DSG ONE port returned HTTP 404 during the same verification. The verified DSG ONE status endpoint is `/api/agent/status`.
+
+### Current production architecture
 
 ```
-User
-  ↓
-Agent + Core Spin
-  ↓
+User / ChatGPT / Access Hub / CLI
+        ↓
+DSG ONE V1
+  product surface + Core Spin orchestration
+        ↓
+Microsoft Agent Framework 1.18.0
+        ↓
 DSG Spacetime
-  ↓ authorized Route
-Agent provider / MCP provider / customer adapter
-  ↓
-DSG Spacetime evidence
-  ↓
-Agent + Core Spin
-  ↓
-User
+  plan / Route / policy / permission / approval authority
+        ↓
+Governed provider
+  BrowserOS / Cinema / RDC / API / approved model adapter
+        ↓
+Evidence + verification
+        ↓
+Core Spin next turn / user-visible result
 ```
 
-**Core Spin** owns job/session history, workflow state, provider references, usage and correlation references. **DSG Spacetime** independently owns plan/Route authorization, execution receipts and its tamper-evident evidence chain. The UI may join both at read time, but the stores are not merged.
+There is no separate production component named `EVO`. The autonomous loop is the composed DSG ONE/Core Spin + durable Workroom + Spacetime + evidence-feedback loop.
 
-There is no separate outer gate wrapped around Spacetime: **Spacetime itself is the authorization and execution boundary.**
+### Authority boundaries
 
-## Verified Spacetime production stack — 5 September 2026
+* **DSG Spacetime** owns governed Route binding, plan/payload alignment, permission, approval, provider invocation and evidence binding.
+* **DSG ONE V1 / Core Spin** owns product workflow and orchestration; it must not bypass Spacetime for external side effects.
+* **Cinema** is the verification/evidence/replay and BrowserOS execution surface under governed authorization.
+* **RDC** is a governed provider. High-risk write/shell paths require exact payload binding and approval.
+* **Brain / Agent v0 / simulation / repair** propose, rank or synthesize. A model route is not execution authority.
 
-The private production runtime was deployed to **Azure Container Apps** from commit `95cf915ed4593720cbfae02d65788726b1c1df87`.
+### User-facing product map
 
-```
-Deploy workflow: 33968246995
-Result: SUCCESS
-Image digest: sha256:3cfb71591e5bae45bdbc50a6f51b4af5563a19495aaf267b9627e2efaae212f2
-```
+#### DSG Spacetime
 
-The deployment proof executed:
+Production MCP: `https://aws.dsg.pics/mcp`
 
-```
-Spacetime
-  ↓
-GPT-6 Astra proposal
-  ↓
-Spacetime
-  ↓
-Claude Sonnet 5 → Remote MCP
-  ↓
-Spacetime evidence
-  ↓
-GPT-6 Astra final
-```
+Spacetime is the single governed execution boundary. The reasoning model is replaceable; authorization is not delegated to the model.
 
-Verified markers:
+#### Cinema / BrowserOS
 
-* `AZURE_PROVIDER_ASTRA_PROPOSAL=PASS`
-* `AZURE_PROVIDER_ANTHROPIC_MCP=PASS`
-* `AZURE_PROVIDER_ASTRA_FINAL=PASS`
-* `AZURE_PROVIDER_STACK=PASS`
-* unauthenticated MCP requests fail closed
-* Spacetime evidence remained valid across a new Azure Container Apps revision
+Cinema is running on the AWS production host and reports ready/backend ready. Customer interaction should enter through the current DSG surfaces rather than the retired Azure Container Apps dashboard URL.
 
-Production endpoints recorded by the deployment workflow:
+#### Workroom
 
-* Health: `https://dsg-spacetime-prod.greenglacier-493f3f71.westus3.azurecontainerapps.io/health`
-* MCP: `https://dsg-spacetime-prod.greenglacier-493f3f71.westus3.azurecontainerapps.io/mcp`
+Customer entry: `https://dsg.pics/dsg/workroom`
 
-The MCP endpoint requires the configured production authentication boundary. A public URL does not imply anonymous execution capability.
+The unauthenticated boundary is expected to redirect to login. A complete signed-in workspace → Agent Chat → Command Center → identity/memory/evidence flow is still an open acceptance gate.
 
-## Core Spin production persistence
+#### DSG ONE V1
 
-Core Spin production persistence was verified separately in Supabase with job:
+The production status probe verified on the current AWS runtime is:
 
-`08e4b8be-6b8d-4207-be67-fd8d66873f76`
+`GET /api/agent/status`
 
-Current verified properties:
+Decision semantics remain `ALLOW`, `WAITING_PERMISSION`, and `BLOCK`, followed by execution evidence.
 
-* status: `COMPLETED`
-* source full-system run: `33966856203`
-* provider sequence: `OpenAI → Anthropic → OpenAI`
-* unified read mode: `references_only`
-* Spacetime storage: `separate`
-* three `SPACETIME_ROUTE_COMPLETED` events reference Spacetime evidence indexes `0`, `1`, and `2`
+### Historical provider evidence
 
-Core Spin does **not** duplicate Spacetime's decision/request/result/previous-hash ledger. It keeps correlation references so an operator view can combine both sources without collapsing their ownership boundaries.
+Azure Container Apps, Azure App Service, and Render deployment records remain valid **only for their original timestamps and source revisions**. They are not current production authority and must not be used to describe the 2 October 2026 runtime.
 
-{% hint style="warning" %}
-**Claim boundary:** the Core Spin production persistence proof and the later Azure provider-stack deployment proof are both verified, but they are different executed runs. Do not describe them as a fresh post-deploy Core Spin → Azure Spacetime → Core Spin transaction until that exact combined run is executed and recorded.
-{% endhint %}
-
-## Product map
-
-### DSG Spacetime
-
-Spacetime is the governed execution boundary for plan-authorized actions. It verifies plan identity, plan hash, registered Route, entitlement, agent binding and required approval before calling the authorized adapter/provider. Successful execution produces evidence through the Spacetime chain.
-
-It supports a swappable-agent model: the reasoning provider is not the governance authority. GPT/Astra, Claude, Gemini, customer agents and other approved providers can sit behind the same boundary when the required Route/adapter exists.
-
-Provider-native MCP or hosted tools may be used as execution transports, but they do not gain authority to bypass Spacetime.
-
-### Cinema Proof Agent
-
-Cinema is the customer-facing deterministic execution and evidence runtime with Agent Chat, exact-plan approval, Shared Browser, paired-Agent Remote MCP, Universal Runtime, Z3 verification where required, evidence, replay and durable audit.
-
-Production dashboard:
-
-https://dsg-cinema-production.nicetree-a005fe99.westus3.azurecontainerapps.io/dashboard
-
-Cinema production evidence is separate from the Spacetime provider-stack proof above.
-
-### Control Plane
-
-The Control Plane is the broader governance and promotion authority for existing agents, MCP servers, APIs and automated workflows.
-
-**Authoritative production platform:** Azure App Service
-
-* Production URL: `https://dsg-control-plane.azurewebsites.net`
-* Health probe: `GET /api/health`
-* Deployment path: exact commit → container image → Azure Container Registry → staging slot → runtime/evidence verification → production promotion
-* Rollback: staging-slot reverse swap
-* Vercel and Render are not active Control Plane production targets
-
-### DSG ONE V1
-
-DSG ONE V1 defines the plan-authorized execution contract used by DSG runtimes.
-
-| State                | Meaning                                                                                                                           |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `ALLOW`              | Exact action is inside the approved plan and the required capability is ready.                                                    |
-| `WAITING_PERMISSION` | Action remains inside the approved plan, but a capability, credential, tool or infrastructure dependency is not ready.            |
-| `BLOCK`              | Action is outside the approved boundary, plan identity does not match, or action/target/parameters differ from the approved step. |
-
-A valid credential does not create out-of-plan authority.
-
-## What the operator should see
-
-Every governed execution should answer five questions:
-
-1. **ACTION** — What is the Agent attempting?
-2. **PLAN ALIGNMENT** — Is it inside the approved plan?
-3. **PERMISSION** — Is the required authority/capability available?
-4. **EVIDENCE** — What proves the result?
-5. **EXECUTION / AUDIT** — What actually happened and what was recorded?
-
-## Evidence-first claim rule
-
-Use this hierarchy when making production claims:
+### Evidence-first claim rule
 
 ```
 current live runtime + exact deployment identity + persisted evidence
@@ -165,17 +107,15 @@ repository configuration
 historical documentation
 ```
 
-Configuration is not execution evidence. Source code is not production evidence. A historical successful workflow does not prove a different current execution.
+Configuration is not execution evidence. A route being registered does not prove its external provider is online. A scoped PASS does not automatically promote the whole system to PASS.
 
-## Documentation navigation
+### Documentation navigation
 
-* **Verification record** — exact current deployment and persistence evidence
-* **Cinema Proof Agent** — customer runtime and Cinema-specific production evidence
-* **Control Plane** — Azure governance and promotion authority
+* **Verification record** — current runtime evidence and remaining gates
+* **Cinema Proof Agent** — Cinema/BrowserOS execution and evidence surface
+* **Control Plane** — current AWS governance/control-plane state
 * **DSG ONE V1** — plan-authorized execution contract
-* **DSG API Reference** — Control Plane API contract
-* **AGI Simulation** — deterministic candidate-generation and simulation layer
-
-***
+* **DSG API Reference** — API contract; current production claims must be AWS-bound
+* **AGI Simulation** — proposal/candidate-generation layer
 
 **DSG ONE — govern the action, preserve the evidence, verify the result.**

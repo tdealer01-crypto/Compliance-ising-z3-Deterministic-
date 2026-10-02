@@ -1,146 +1,88 @@
 ---
-description: Current deployment, health, readiness, MCP and claim-boundary evidence.
+description: >-
+  Current AWS deployment, health, image binding, MCP and claim-boundary
+  evidence.
 ---
 
 # Verification record
 
-**Last documentation review:** 5 September 2026
+**Last runtime verification:** 2 October 2026
 
-This page separates **verified live execution evidence** from repository configuration and historical integration status.
+This page separates current runtime evidence from historical deployment records and repository configuration.
 
-## DSG Spacetime — Azure production provider stack
+### AWS production host
 
-### Exact deployment identity
+* EC2: `i-01a2ee90890a558c3`
+* Region/AZ: `us-east-1 / us-east-1a`
+* Instance type: `t3.small`
+* State: `running`
+* EC2 instance/system/EBS reachability: `ok`
+* SSM managed instance: `Online`
 
-Verified production rollout:
+### Live containers and immutable bindings
 
-```
-Private production commit: 95cf915ed4593720cbfae02d65788726b1c1df87
-Deploy workflow: 33968246995
-Workflow conclusion: SUCCESS
-Image digest: sha256:3cfb71591e5bae45bdbc50a6f51b4af5563a19495aaf267b9627e2efaae212f2
-```
+| Component  | Runtime state     | Verified image                                                            |
+| ---------- | ----------------- | ------------------------------------------------------------------------- |
+| DSG ONE V1 | running / healthy | `sha256:2b79455abf1a4d8b29abccb384e55fe83f82d8b44a117fe86133a7024dfa06ad` |
+| Spacetime  | running / healthy | `sha256:5087dcc08956e0618036aa7889f9dbb875f74dfcca661b1b354249b153099e35` |
+| Cinema     | running / healthy | `sha256:b876f7bb86a8eb86a4c732a07a706c217993092da4054bc1fac205c4ca78b3c3` |
 
-Recorded production endpoints:
+The current Spacetime container was created from governed stage `36991572295-1`.
 
-```
-Health: https://dsg-spacetime-prod.greenglacier-493f3f71.westus3.azurecontainerapps.io/health
-MCP:    https://dsg-spacetime-prod.greenglacier-493f3f71.westus3.azurecontainerapps.io/mcp
-```
+### DSG ONE status proof
 
-The MCP endpoint is protected by the configured production authentication boundary.
+`GET http://127.0.0.1:8080/api/agent/status` returned HTTP 200 with:
 
-### Executed provider proof
+* `ok=true`
+* repo `dsg-one-v1`
+* source `ea70fbecdde020b0a4d4e44180798418af209f27`
+* image digest `sha256:2b79455abf1a4d8b29abccb384e55fe83f82d8b44a117fe86133a7024dfa06ad`
+* `sourceBound=true`
+* `digestBound=true`
+* DB, automation DB, process and automation-engine checks true
+* Microsoft Agent Framework `1.18.0`
 
-The deployment workflow did not stop at image build or health configuration. It executed the governed provider path and recorded:
+During the same runtime check, `/api/health`, `/api/readiness`, and `/api/v1/status` on the DSG ONE port returned HTTP 404. Do not document those paths as current DSG ONE health/readiness endpoints without a newer proof.
 
-```
-AZURE_PROVIDER_ASTRA_PROPOSAL=PASS
-AZURE_PROVIDER_ANTHROPIC_MCP=PASS
-AZURE_PROVIDER_ASTRA_FINAL=PASS
-DSG Spacetime Azure full runtime: VERIFIED
-AZURE_PROVIDER_STACK=PASS
-```
+### Spacetime proof
 
-Executed path:
+`GET http://127.0.0.1:8787/health` returned HTTP 200:
 
-```
-Spacetime
-  ↓
-GPT-6 Astra proposal
-  ↓
-Spacetime
-  ↓
-Claude Sonnet 5 → Remote MCP
-  ↓
-Spacetime evidence
-  ↓
-GPT-6 Astra final
+```json
+{"ok":true,"service":"dsg-spacetime-mcp","transport":"streamable-http","protocolVersion":"2025-06-18"}
 ```
 
-The same rollout also verified:
+Production public MCP remains `https://aws.dsg.pics/mcp`.
 
-* unauthenticated MCP access was rejected as expected;
-* governed compose/execute reached the authorized execution boundary;
-* the source-free production image contained the Spacetime runtime plus the Astra and Anthropic MCP provider executables;
-* Spacetime evidence remained valid after a new Azure Container Apps revision.
+### Cinema proof
 
-### Storage boundary
+`GET http://127.0.0.1:8000/health` returned HTTP 200:
 
-Spacetime evidence and Core Spin history are separate stores.
-
-Spacetime owns the execution ledger fields such as:
-
-```
-plan_id
-route_id
-decision_hash
-request_hash
-result_hash
-previous_hash
-evidence_hash
+```json
+{"status":"ready","backend":"ready"}
 ```
 
-Core Spin owns job/session history, workflow status, provider references and correlation references. It must not copy the Spacetime hash ledger into its own tables.
+### Governed RDC state
 
-## Core Spin — production Supabase persistence
+Governed activation run `36991572295` is the current RDC acceptance proof and includes status/fs-read/process-list positive execution, negative approval gates for high-risk operations, and evidence-chain verification.
 
-Production persistence verification job:
+RDC PASS is scoped evidence. It does not by itself make the entire release PASS.
 
-`08e4b8be-6b8d-4207-be67-fd8d66873f76`
+### Remaining gates
 
-Verified current row state:
+1. Authenticated Workroom signed-in user E2E.
+2. Production multi-action autonomous Workroom proof with multiple governed provider executions in one goal.
+3. Promoted-source external governed public MCP read closeout; latest state remains partial/open.
+4. Promoted-source XR state smoke/replay/tamper/remove/final-read closeout.
+5. Desktop native enrollment and separate Playwright/Chrome DevTools production bindings.
 
-```
-status: COMPLETED
-risk_level: LOW
-completion_report_id: 10cf3e27-14d0-45bc-b197-fa19f084411b
-source_run_id: 33966856203
-provider_sequence: OpenAI → Anthropic → OpenAI
-unified_read: references_only
-spacetime_storage: separate
-production_persistence_test: true
-```
+Until these are closed, whole-system live runtime status remains `PENDING_REVERIFY`.
 
-The job's runtime history contains three `SPACETIME_ROUTE_COMPLETED` events:
+### Historical evidence
 
-| Step | Provider  | Route                               | Spacetime evidence index |
-| ---: | --------- | ----------------------------------- | -----------------------: |
-|    0 | OpenAI    | `route.agent.astra.live`            |                        0 |
-|    1 | Anthropic | `route.mcp.anthropic.protocol.live` |                        1 |
-|    2 | OpenAI    | `route.agent.astra.live`            |                        2 |
+Earlier Azure Container Apps, Azure App Service, Render and pre-promotion AWS digests remain historical records. They must not be substituted for the current AWS bindings above.
 
-Each event keeps the corresponding Spacetime evidence hash as a correlation reference. Core Spin does not duplicate Spacetime's `decision_hash`, `request_hash`, `result_hash` or `previous_hash` chain.
-
-{% hint style="warning" %}
-The Core Spin Supabase proof uses full-system run `33966856203`. The Azure production provider-stack deployment uses later run `33968246995`. Both are verified, but they are **not the same transaction**. A fresh post-deploy Core Spin → Azure Spacetime → Core Spin persistence loop remains a separate proof if required.
-{% endhint %}
-
-## Cinema Proof Agent
-
-Dated Cinema production evidence remains a separate proof surface. Earlier verified records include Azure deployment, external production MCP proof, native Z3 verification, replay matching and rolling-revision persistence for the Cinema workflow.
-
-Cinema production dashboard:
-
-`https://dsg-cinema-production.nicetree-a005fe99.westus3.azurecontainerapps.io/dashboard`
-
-These Cinema records must not be substituted for Spacetime provider-stack evidence, and vice versa.
-
-## Control Plane
-
-Verified repository policy:
-
-* production authority is Azure App Service;
-* production URL is `https://dsg-control-plane.azurewebsites.net`;
-* health probe is `/api/health`;
-* rollback target is a staging-slot reverse swap;
-* Vercel and Render are not active production authorities.
-
-Repository configuration alone is not sufficient to assert a new Control Plane deployment.
-
-## Evidence hierarchy
-
-Use this hierarchy for all present-moment claims:
+### Evidence hierarchy
 
 ```
 current live runtime + exact deployment identity + persisted evidence
@@ -152,4 +94,4 @@ repository configuration
 historical documentation
 ```
 
-If evidence is missing, report the state as `UNVERIFIED`, `REVIEW`, `BLOCKED`, or the applicable fail-closed state. Do not upgrade missing evidence into success.
+If evidence is missing, preserve `OPEN`, `PARTIAL`, `UNVERIFIED`, `BLOCKED`, or the applicable fail-closed state.
