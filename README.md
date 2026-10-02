@@ -6,13 +6,21 @@ description: >-
 
 # 🛡️ DSG Docs — Governed AI Execution
 
+Page "DSG Docs — Governed AI Execution" — id: dvqXZLaiaujd1LXgzfVV, path: /readme
+
+***
+
+### description: >- Current DSG ONE product map, verified AWS production authority, current Spacetime/Cinema runtime state, and evidence-first claim boundaries.
+
+## DSG Docs — Governed AI Execution
+
 **Canonical product domain:** https://www.dsg.pics
 
 DSG ONE is a governance, execution, orchestration, and evidence system for AI agents, MCP clients, API workflows, CI/CD automation, and autonomous runtimes.
 
 The operating rule is: **approved work executes only through the authorized boundary; out-of-plan work stops; missing capabilities remain waiting; and production claims require runtime evidence.**
 
-### Current production truth — 2 October 2026
+#### Current production truth — 2 October 2026
 
 | Surface                                      | Verified current state                                                                                                |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -34,7 +42,7 @@ The operating rule is: **approved work executes only through the authorized boun
 
 The generic paths `/api/health`, `/api/readiness`, and `/api/v1/status` on the DSG ONE port returned HTTP 404 during the same verification. The verified DSG ONE status endpoint is `/api/agent/status`.
 
-### Current production architecture
+#### Current production architecture
 
 ```
 User / ChatGPT / Access Hub / CLI
@@ -57,7 +65,7 @@ Core Spin next turn / user-visible result
 
 There is no separate production component named `EVO`. The autonomous loop is the composed DSG ONE/Core Spin + durable Workroom + Spacetime + evidence-feedback loop.
 
-### Authority boundaries
+#### Authority boundaries
 
 * **DSG Spacetime** owns governed Route binding, plan/payload alignment, permission, approval, provider invocation and evidence binding.
 * **DSG ONE V1 / Core Spin** owns product workflow and orchestration; it must not bypass Spacetime for external side effects.
@@ -65,25 +73,25 @@ There is no separate production component named `EVO`. The autonomous loop is th
 * **RDC** is a governed provider. High-risk write/shell paths require exact payload binding and approval.
 * **Brain / Agent v0 / simulation / repair** propose, rank or synthesize. A model route is not execution authority.
 
-### User-facing product map
+#### User-facing product map
 
-#### DSG Spacetime
+**DSG Spacetime**
 
 Production MCP: `https://aws.dsg.pics/mcp`
 
 Spacetime is the single governed execution boundary. The reasoning model is replaceable; authorization is not delegated to the model.
 
-#### Cinema / BrowserOS
+**Cinema / BrowserOS**
 
 Cinema is running on the AWS production host and reports ready/backend ready. Customer interaction should enter through the current DSG surfaces rather than the retired Azure Container Apps dashboard URL.
 
-#### Workroom
+**Workroom**
 
 Customer entry: `https://dsg.pics/dsg/workroom`
 
 The unauthenticated boundary is expected to redirect to login. A complete signed-in workspace → Agent Chat → Command Center → identity/memory/evidence flow is still an open acceptance gate.
 
-#### DSG ONE V1
+**DSG ONE V1**
 
 The production status probe verified on the current AWS runtime is:
 
@@ -91,11 +99,11 @@ The production status probe verified on the current AWS runtime is:
 
 Decision semantics remain `ALLOW`, `WAITING_PERMISSION`, and `BLOCK`, followed by execution evidence.
 
-### Historical provider evidence
+#### Historical provider evidence
 
 Azure Container Apps, Azure App Service, and Render deployment records remain valid **only for their original timestamps and source revisions**. They are not current production authority and must not be used to describe the 2 October 2026 runtime.
 
-### Evidence-first claim rule
+#### Evidence-first claim rule
 
 ```
 current live runtime + exact deployment identity + persisted evidence
@@ -109,7 +117,18 @@ historical documentation
 
 Configuration is not execution evidence. A route being registered does not prove its external provider is online. A scoped PASS does not automatically promote the whole system to PASS.
 
-### Documentation navigation
+#### Documentation synchronization state
+
+**Verified current state — 2 October 2026:**
+
+* Full-site Git Sync is **not yet enabled** for the DSG Docs site.
+* The `Docs` space is connected to GitHub repo `tdealer01-crypto/Compliance-ising-z3-Deterministic-` and its latest export completed successfully after this documentation update.
+* The other site spaces are not currently Git-synced.
+* Therefore the site does **not yet** have one repository acting as the canonical source for all Architecture / Runtime / Spacetime / Cinema / Evidence / Deployment documentation.
+
+**Target state:** configure GitBook Full-site Git Sync to one explicitly selected documentation repository, then treat GitBook change requests + that repository as the controlled documentation workflow. Do not claim this target state until the site-level configuration is verified.
+
+#### Documentation navigation
 
 * **Verification record** — current runtime evidence and remaining gates
 * **Cinema Proof Agent** — Cinema/BrowserOS execution and evidence surface
